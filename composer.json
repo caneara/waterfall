@@ -1,0 +1,42 @@
+{
+    "name": "mattkingshott/waterfall",
+    "description": "A package that performs cascading deletes in batches to ease database strain",
+    "keywords": [
+        "waterfall",
+        "php",
+        "laravel",
+        "database",
+        "cascade"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/mattkingshott/waterfall",
+    "autoload": {
+        "psr-4": {
+            "Waterfall\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Waterfall\\Tests\\": "tests"
+        }
+    },
+    "require": {
+        "php": "^8.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^6.0",
+        "phpunit/phpunit": "^9.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Waterfall\\ServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "minimum-stability": "stable"
+}
