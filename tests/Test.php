@@ -53,6 +53,8 @@ class Test extends TestCase
         $this->assertEquals(6, Post::orderBy('id')->get()[1]->id);
         $this->assertEquals(7, Post::orderBy('id')->get()[2]->id);
         $this->assertEquals(8, Post::orderBy('id')->get()[3]->id);
+
+        $this->assertNull($_ENV['duration'] ?? null);
     }
 
     /** @test */
@@ -71,6 +73,8 @@ class Test extends TestCase
         $this->assertEquals(6, Post::orderBy('id')->get()[1]->id);
         $this->assertEquals(7, Post::orderBy('id')->get()[2]->id);
         $this->assertEquals(8, Post::orderBy('id')->get()[3]->id);
+
+        $this->assertNull($_ENV['duration'] ?? null);
     }
 
     /** @test */
@@ -92,11 +96,15 @@ class Test extends TestCase
         $this->assertEquals(6, Post::orderBy('id')->get()[4]->id);
         $this->assertEquals(7, Post::orderBy('id')->get()[5]->id);
         $this->assertEquals(8, Post::orderBy('id')->get()[6]->id);
+
+        $this->assertNull($_ENV['duration'] ?? null);
     }
 
     /** @test */
     public function it_can_delete_users_using_restrictions_and_a_custom_key() : void
     {
+        $_ENV['waterfall_debug'] = false;
+
         $this->assertCount(2, User::get());
         $this->assertCount(8, Post::get());
 
@@ -113,18 +121,20 @@ class Test extends TestCase
         $this->assertEquals(6, Post::orderBy('id')->get()[4]->id);
         $this->assertEquals(7, Post::orderBy('id')->get()[5]->id);
         $this->assertEquals(8, Post::orderBy('id')->get()[6]->id);
+
+        $this->assertNull($_ENV['duration'] ?? null);
     }
 
     /** @test */
     public function it_can_delete_users_in_batches() : void
     {
+        $_ENV['waterfall_debug'] = true;
+
         app('config')->set('waterfall.batch_size', 2);
-        app('config')->set('waterfall.rest_time', 1);
+        app('config')->set('waterfall.rest_time', 5);
 
         $this->assertCount(2, User::get());
         $this->assertCount(8, Post::get());
-
-        $start = microtime(true);
 
         DeleteUserJob::dispatch(1);
 
@@ -137,6 +147,6 @@ class Test extends TestCase
         $this->assertEquals(7, Post::orderBy('id')->get()[2]->id);
         $this->assertEquals(8, Post::orderBy('id')->get()[3]->id);
 
-        $this->assertEquals(3, (int) (microtime(true) - $start));
+        $this->assertEquals(15, $_ENV['duration']);
     }
 }

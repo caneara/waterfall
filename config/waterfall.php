@@ -34,10 +34,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | This value controls the number of seconds that Waterfall will wait when
-    | dispatching a follow-up job to continue the deletion process. Note that
-    | this delay occurs within the job as a sleep operation, so make sure to
-    | keep it relatively short e.g. no more than 20 seconds. This would then
-    | give the job 40 seconds to delete the latest batch of records.
+    | dispatching a follow-up job to continue the deletion process. The pause
+    | is added to the dispatched job using the standard 'delay' method.
     |
     */
     'rest_time' => 5,

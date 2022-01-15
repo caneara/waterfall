@@ -13,17 +13,28 @@ class Builder
      */
     public static function create() : void
     {
-        $setup = [
-            'driver'   => 'sqlite',
-            'database' => __DIR__ . '/database.sqlite',
-        ];
+        static::configuration();
 
         @unlink(__DIR__ . '/database.sqlite');
         touch(__DIR__ . '/database.sqlite');
 
+        (new ServiceProvider(app()))->boot();
+    }
+
+    /**
+     * Apply the configuration settings.
+     *
+     */
+    protected static function configuration() : void
+    {
+        $database = [
+            'driver'   => 'sqlite',
+            'database' => __DIR__ . '/database.sqlite',
+        ];
+
         app('config')->set('database.default', 'sqlite');
         app('config')->set('database.migrations', 'migrations');
-        app('config')->set('database.connections.sqlite', $setup);
+        app('config')->set('database.connections.sqlite', $database);
 
         app('config')->set('queue.default', 'sync');
         app('config')->set('queue.connections.sync', ['driver' => 'sync']);
@@ -32,8 +43,6 @@ class Builder
         app('config')->set('waterfall.queue_connection', '');
         app('config')->set('waterfall.batch_size', 1000);
         app('config')->set('waterfall.rest_time', 0);
-
-        (new ServiceProvider(app()))->boot();
     }
 
     /**

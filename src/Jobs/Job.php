@@ -79,6 +79,21 @@ abstract class Job implements ShouldQueue
     }
 
     /**
+     * Log the delay times between jobs for testing and debugging.
+     *
+     */
+    private function log(Job $job) : static
+    {
+        if (! ($_ENV['waterfall_debug'] ?? false)) {
+            return $job;
+        }
+
+        $_ENV['duration'] = ($_ENV['duration'] ?? 0) + $job->delay;
+
+        return $job;
+    }
+
+    /**
      * Retrieve the complete set of tasks to perform.
      *
      */
@@ -101,9 +116,10 @@ abstract class Job implements ShouldQueue
             return;
         }
 
-        sleep(config('waterfall.rest_time'));
+        $job = (new static($this->id, $this->task))
+            ->delay(config('waterfall.rest_time'));
 
-        static::dispatch($this->id, $this->task);
+        dispatch($this->log($job));
     }
 
     /**
