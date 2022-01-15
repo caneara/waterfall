@@ -52,9 +52,7 @@ Waterfall includes a configuration file that allows you to:
 2. Set the batch size / number of records to delete per query (defaults to 1000).
 3. Set the rest time in seconds to give the database between batches (defaults to 5).
 
-```
-Make sure to only create a small number of workers for the queue e.g. 2 or 3. Too many workers risks overwhelming the database, which completely negates the purpose of the package.
-```
+> Make sure to only create a small number of workers for the queue e.g. 2 or 3. Too many workers risks overwhelming the database, which completely negates the purpose of the package.
 
 If you wish to change any of these values, publish the configuration file using Artisan:
 
