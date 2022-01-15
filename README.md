@@ -21,6 +21,8 @@ in your migrations as you normally would.
 
 If your database contains or will contain hundreds of thousands, millions or even billions of records, and the deletion of a record will cause a cascade involving a similar number of records, then it is likely to overwhelm your database. In this scenario, Waterfall can be a good choice.
 
+The package is also a good choice if you're using a so-called 'NewSQL' platform that doesn't offer cascade deletion (e.g. because of a lack of foreign key constraints).
+
 ## How does it work?
 
 The process is fairly simple. You define a job e.g. `DeleteUserJob` that extends Waterfall's own `Waterfall\Jobs\Job`. Within this job, you configure the cascade tasks that need to be performed. When you're ready to delete a 'user' record, you dispatch `DeleteUserJob` and provide it with the ID of the 'user'.
@@ -49,6 +51,10 @@ Waterfall includes a configuration file that allows you to:
 1. Set the queue name to use for the cascade deletion jobs (defaults to 'deletion').
 2. Set the batch size / number of records to delete per query (defaults to 1000).
 3. Set the rest time in seconds to give the database between batches (defaults to 5).
+
+```
+Make sure to only create a small number of workers for the queue e.g. 2 or 3. Too many workers risks overwhelming the database, which completely negates the purpose of the package.
+```
 
 If you wish to change any of these values, publish the configuration file using Artisan:
 
