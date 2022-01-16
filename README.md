@@ -161,7 +161,7 @@ If you need to also specify a different foreign key, then supply the `Closure` a
 protected function tasks() : array
 {
     return [
-        Task::create(Post::class, 'author_id' function($query) {
+        Task::create(Post::class, 'author_id', function($query) {
             return $query->where('year', 2022);
         }),
     ];
@@ -208,7 +208,7 @@ class DeleteUserJob extends Job
     protected function tasks() : array
     {
         return [
-            Task::create(Like::class, 'posts.user_id' function($query) {
+            Task::create(Like::class, 'posts.user_id', function($query) {
                 return $query->join('posts', 'likes.post_id', '=', 'posts.id');
             }),
             Task::create(Post::class, 'user_id'),
