@@ -2,6 +2,7 @@
 
 namespace Waterfall\Tests;
 
+use Waterfall\ServiceProvider;
 use Waterfall\Tests\Models\Post;
 use Waterfall\Tests\Models\User;
 use Orchestra\Testbench\TestCase;
@@ -22,6 +23,8 @@ class Test extends TestCase
         parent::setUp();
 
         Builder::create();
+
+        (new ServiceProvider(app()))->register();
 
         $this->loadMigrationsFrom(__DIR__ . '/Migrations');
 

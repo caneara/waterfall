@@ -35,11 +35,6 @@ class Builder
 
         app('config')->set('queue.default', 'sync');
         app('config')->set('queue.connections.sync', ['driver' => 'sync']);
-
-        app('config')->set('waterfall.queue_name', 'deletions');
-        app('config')->set('waterfall.queue_connection', '');
-        app('config')->set('waterfall.batch_size', 1000);
-        app('config')->set('waterfall.rest_time', 0);
     }
 
     /**
