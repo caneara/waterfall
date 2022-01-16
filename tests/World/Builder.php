@@ -2,7 +2,6 @@
 
 namespace Waterfall\Tests\World;
 
-use Waterfall\ServiceProvider;
 use Illuminate\Support\Facades\DB;
 
 class Builder
@@ -17,8 +16,6 @@ class Builder
 
         @unlink(__DIR__ . '/database.sqlite');
         touch(__DIR__ . '/database.sqlite');
-
-        (new ServiceProvider(app()))->boot();
     }
 
     /**
