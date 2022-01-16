@@ -41,6 +41,22 @@ class Test extends TestCase
     }
 
     /** @test */
+    public function it_soft_deletes_the_main_record_immediately() : void
+    {
+        app('config')->set('queue.default', 'database');
+
+        $this->assertCount(2, User::get());
+        $this->assertCount(8, Post::get());
+
+        DeleteUserJob::dispatch(1);
+
+        $this->assertCount(1, User::get());
+        $this->assertCount(8, Post::get());
+
+        $this->assertNull($_ENV['duration'] ?? null);
+    }
+
+    /** @test */
     public function it_can_delete_users() : void
     {
         $this->assertCount(2, User::get());

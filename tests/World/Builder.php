@@ -29,11 +29,20 @@ class Builder
             'database' => __DIR__ . '/database.sqlite',
         ];
 
+        $queue = [
+            'driver'       => 'database',
+            'table'        => 'jobs',
+            'queue'        => 'default',
+            'retry_after'  => 90,
+            'after_commit' => false,
+        ];
+
         app('config')->set('database.default', 'sqlite');
         app('config')->set('database.migrations', 'migrations');
         app('config')->set('database.connections.sqlite', $database);
 
         app('config')->set('queue.default', 'sync');
+        app('config')->set('queue.connections.database', $queue);
         app('config')->set('queue.connections.sync', ['driver' => 'sync']);
     }
 
