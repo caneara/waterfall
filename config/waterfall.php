@@ -13,6 +13,7 @@ return [
     | the database, thereby negating the value this package provides.
     |
     */
+
     'queue_name' => 'deletions',
 
     /*
@@ -26,6 +27,7 @@ return [
     | you might want to consider lowering it.
     |
     */
+
     'batch_size' => 1000,
 
     /*
@@ -38,6 +40,7 @@ return [
     | is added to the dispatched job using the standard 'delay' method.
     |
     */
+
     'rest_time' => 5,
 
 ];
