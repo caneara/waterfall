@@ -7,10 +7,12 @@ use Illuminate\Support\Facades\DB;
 class HardDeleteTask extends Task
 {
     /**
-     * Generate the database query for the task.
+     * Create the database query for the task.
+     *
+     * @internal.
      *
      */
-    public function query(mixed $id) : mixed
+    public function generate(mixed $id) : mixed
     {
         $query = DB::table($this->table)->where('id', $id);
 

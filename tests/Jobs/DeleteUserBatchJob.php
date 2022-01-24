@@ -7,7 +7,7 @@ use Waterfall\Tasks\Task;
 use Waterfall\Tests\Models\Post;
 use Waterfall\Tests\Models\User;
 
-class DeleteUserUsingKeyJob extends Job
+class DeleteUserBatchJob extends Job
 {
     /**
      * The model type.
@@ -24,7 +24,8 @@ class DeleteUserUsingKeyJob extends Job
         return [
             Task::create()
                 ->model(Post::class)
-                ->key('user_id'),
+                ->batch(2)
+                ->rest(now()->addSeconds(5)),
         ];
     }
 }

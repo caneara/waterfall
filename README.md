@@ -44,6 +44,12 @@ Pull in the package using Composer:
 composer require mattkingshott/waterfall
 ```
 
+## Upgrading
+
+Version 2 introduces a completely different way of configuring tasks. In version 1, tasks were configured using a series of parameters on the `create` factory method, however with the addition of hooks, this became quite cumbersome.
+
+As a result, the `Task` class was refactored to provide a series of setter methods that can be chained together to build up the task. It is recommended that you re-read all of the readme when upgrading.
+
 ## Configuration
 
 Waterfall includes a configuration file that allows you to:
@@ -57,6 +63,8 @@ If you wish to change any of these values, publish the configuration file using 
 ```bash
 php artisan vendor:publish
 ```
+
+Note that as of version 2, you can override the batch size and rest time within individual tasks. Therefore, if you intend to set custom values for your tasks and are happy with the default queue name, there is no need to publish the configuration file.
 
 ## Queues
 
@@ -98,9 +106,13 @@ class DeleteUserJob extends Job
 
 Note the inclusion of a `$type` attribute on the job. This should be set to the model type of the main record that is being deleted. In this example, we're deleting a user, so the `$type` is `User::class`.
 
-### Configuring the tasks
+### Creating tasks
 
-At the moment, all the job will do, is soft-delete the user, then hard-delete it. Without intermediate tasks, this will still trigger a cascading delete. To prevent this, let's add some tasks. We do this by adding a `tasks()` method to the job, and then creating one or more `Waterfall\Tasks\Task` e.g.
+At the moment, all the job will do, is soft-delete the user, then hard-delete it. Without intermediate tasks, this will still trigger a cascading delete. To prevent this, let's add some tasks. We do this by adding a `tasks()` method to the job, and then creating one or more `Waterfall\Tasks\Task`.
+
+#### Set the related model
+
+Our first step, is to set the related model (e.g. a user has many posts, so the model will be `Post::class`). We do this by using the `model` method e.g.
 
 ```php
 use Waterfall\Tasks\Task;
@@ -108,7 +120,8 @@ use Waterfall\Tasks\Task;
 protected function tasks() : array
 {
     return [
-        Task::create(Post::class),
+        Task::create()
+            ->model(Post::class)
     ];
 }
 ```
@@ -119,51 +132,51 @@ Waterfall will intepret this as
 DELETE FROM `posts` WHERE `user_id` = ? LIMIT 1000
 ```
 
+You can also use the `table` method if you prefer e.g.
+
+```php
+use Waterfall\Tasks\Task;
+
+protected function tasks() : array
+{
+    return [
+        Task::create()
+            ->table('posts')
+    ];
+}
+```
+
 #### Configuring the foreign key
 
-Notice how Waterfall has guessed the foreign key by using the class we defined for `$type`. In many cases, this will be correct. However, if you need to use a different key, then you can set it explicitly:
+Notice how Waterfall has guessed the foreign key by using the class we defined for `$type`. In many cases, this will be correct. However, if you need to use a different key, then you can set it explicitly using the `key` method:
 
 ```php
 protected function tasks() : array
 {
     return [
-        Task::create(Post::class, 'author_id'),
+        Task::create()
+            ->model(Post::class)
+            ->key('author_id')
     ];
 }
 ```
 
-#### Modifying the underlying query
+#### Modifying the query
 
 In many cases, you'll simply want to delete all records associated with the main record. However, if you need to be more specific e.g. you want to include a `WHERE` condition, or add a `JOIN`, then you can modify the query.
 
-To do this, supply a `Closure` that accepts the current `$query` as a parameter. You are then free to modify the query however you wish e.g.
+To do this, call the `query` method and supply a `Closure` that accepts the current `$query` as a parameter. You are then free to modify the query however you wish e.g.
 
 ```php
 protected function tasks() : array
 {
     return [
-        Task::create(Post::class, function($query) {
-            return $query->where('year', 2022);
-        }),
-    ];
-}
-```
-
-Waterfall will intepret this as
-
-```sql
-DELETE FROM `posts` WHERE `user_id` = ? AND `year` = 2022 LIMIT 1000
-```
-
-If you need to also specify a different foreign key, then supply the `Closure` as the third parameter e.g.
-
-```php
-protected function tasks() : array
-{
-    return [
-        Task::create(Post::class, 'author_id', function($query) {
-            return $query->where('year', 2022);
-        }),
+        Task::create()
+            ->model(Post::class)
+            ->key('author_id')
+            ->query(function($query) {
+                return $query->where('year', 2022);
+            })
     ];
 }
 ```
@@ -173,6 +186,64 @@ Waterfall will intepret this as
 ```sql
 DELETE FROM `posts` WHERE `author_id` = ? AND `year` = 2022 LIMIT 1000
 ```
+
+#### Adjusting batch size and rest time
+
+By default, Waterfall will use the batch size and rest time defined within its configuration file (which you can publish and alter if desired). However, you can override these values for individual tasks if you need to. This is particularly useful if you are making use of hooks (which we will explore in a moment).
+
+To alter the batch size or rest time, call the `batch` or `rest` methods respectively e.g.
+
+```php
+protected function tasks() : array
+{
+    return [
+        Task::create()
+            ->model(Post::class)
+            ->batch(10) // retrieve up to 10 records at a time
+            ->rest(15)  // delay follow-up jobs for the task by 15 seconds
+    ];
+}
+```
+
+The `rest` method also accepts a `Carbon` instance e.g.
+
+```php
+Task::create()->rest(300)                  // 5 minutes
+Task::create()->rest(now()->addMinutes(5)) // 5 minutes
+```
+
+#### Adding hooks to your tasks
+
+When deleting related records, you may need to undertake additional steps. For example, blog posts might have banner images stored on disk. When we delete the blog posts, we need to delete those images to. Waterfall allows for this by including a hooks feature.
+
+You can hook into a task either before a batch deletion, after a batch deletion, or both. To do this, call the `before` or `after` method and supply a `Closure` that accepts an `$items` parameter. The `$items` parameter is an instance of a `Collection` containing the current batch of records.
+
+> For performance and memory reasons, the records are retrieved as simple objects. If you want models, then call the `hydrate` method on the task e.g. `Task::create()->model(Post::class)->hydrate()->before(...)`.
+
+Let's see how we might delete the banner images in the above example:
+
+```php
+protected function tasks() : array
+{
+    return [
+        Task::create()
+            ->model(Post::class)
+            ->before(function($items) {
+                $items->each(function($post) {
+                    Storage::delete($post->banner_path);
+                })
+            })
+    ];
+}
+```
+
+It is important to understand that using hooks requires Waterfall to fetch the batch of records from the database e.g. perform a `SELECT` query. When hooks are not being used, Waterfall just performs a `DELETE` query, which is much more efficient.
+
+If you want to use hooks, then there are some important things to keep in mind:
+
+1. For large records, you risk running out memory. Therefore, make sure to set a lower batch size.
+2. If you have large records and only need the IDs or a subset of columns, then consider using the `query` method to select only the required fields. This will put less strain on the database and reduce the risk of running out of memory.
+3. Hooks require additional processing time, so make sure to give your jobs a sufficient timeout.
 
 ### How to order your tasks
 
@@ -188,7 +259,7 @@ If you were to delete a 'user', it would trigger a cascade to delete all of the 
 likes -> posts -> users
 ```
 
-Here's a complete job example that covers how to do this. Note that this assumes that 'posts' has a `user_id` foreign key, and that 'likes' has `post_id` foreign key.
+Here's a complete job example that covers how to do this. Note that this assumes that 'posts' has a `author_id` foreign key, and that 'likes' has `post_id` foreign key.
 
 ```php
 <?php
@@ -208,10 +279,24 @@ class DeleteUserJob extends Job
     protected function tasks() : array
     {
         return [
-            Task::create(Like::class, 'posts.user_id', function($query) {
-                return $query->join('posts', 'likes.post_id', '=', 'posts.id');
-            }),
-            Task::create(Post::class, 'user_id'),
+            Task::create()
+                ->model(Like::class)
+                ->key('posts.author_id')
+                ->query(function($query) {
+                    return $query->join('posts', 'likes.post_id', '=', 'posts.id');
+                })),
+
+            Task::create()
+                ->model(Post::class)
+                ->key('author_id')
+                ->query(function($query) {
+                    return $query->select(['id', 'author_id', 'banner_path']);
+                })),
+                ->before(function($items) {
+                    $items->each(function($post) {
+                        Storage::delete($post->banner_path);
+                    })
+                })
         ];
     }
 }
@@ -220,8 +305,18 @@ class DeleteUserJob extends Job
 Waterfall will intepret this as
 
 ```sql
-DELETE FROM `likes` INNER JOIN `posts` ON `likes`.`post_id` = `posts`.`id` WHERE `posts`.`user_id` = ? LIMIT 1000
-DELETE FROM `posts` WHERE `user_id` = ? LIMIT 1000
+DELETE FROM `likes` INNER JOIN `posts` ON `likes`.`post_id` = `posts`.`id` WHERE `posts`.`author_id` = ? LIMIT 1000
+DELETE FROM `posts` WHERE `author_id` = ? LIMIT 1000
+```
+
+### Dispatching the job
+
+Once all of the tasks have been configured and the `$type` set on the main job class, all that remains, is to dispatch the job and supply the ID of the record to remove.
+
+Continuing on from our example, if we wanted to delete a user with an ID of 6, we'd run the following code:
+
+```php
+DeleteUserJob::dispatch(6);
 ```
 
 ## Enabling cascade deletions at a database level

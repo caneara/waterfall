@@ -22,9 +22,11 @@ class DeleteUserUsingRestrictionsJob extends Job
     protected function tasks() : array
     {
         return [
-            Task::create(Post::class, function($query) {
-                return $query->where('title', 'Lorem ipsum');
-            }),
+            Task::create()
+                ->model(Post::class)
+                ->query(function($query) {
+                    return $query->where('title', 'Lorem ipsum');
+                }),
         ];
     }
 }

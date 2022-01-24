@@ -7,10 +7,12 @@ use Illuminate\Support\Facades\DB;
 class SoftDeleteTask extends Task
 {
     /**
-     * Generate the database query for the task.
+     * Create the database query for the task.
+     *
+     * @internal.
      *
      */
-    public function query(mixed $id) : mixed
+    public function generate(mixed $id) : mixed
     {
         $payload = [
             'deleted_at' => now(),

@@ -7,7 +7,7 @@ use Waterfall\Tasks\Task;
 use Waterfall\Tests\Models\Post;
 use Waterfall\Tests\Models\User;
 
-class DeleteUserUsingKeyJob extends Job
+class DeleteUserBeforeAfterHookJob extends Job
 {
     /**
      * The model type.
@@ -24,7 +24,8 @@ class DeleteUserUsingKeyJob extends Job
         return [
             Task::create()
                 ->model(Post::class)
-                ->key('user_id'),
+                ->before(fn($items) => $_ENV['before_items'] = $items->pluck('id'))
+                ->after(fn($items)  => $_ENV['after_items'] = $items->pluck('id')),
         ];
     }
 }

@@ -22,7 +22,8 @@ class DeleteUserJob extends Job
     protected function tasks() : array
     {
         return [
-            Task::create(Post::class),
+            Task::create()
+                ->model(Post::class),
         ];
     }
 }

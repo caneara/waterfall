@@ -3,6 +3,7 @@
 namespace Waterfall\Jobs;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Collection;
 use Waterfall\Tasks\HardDeleteTask;
 use Waterfall\Tasks\SoftDeleteTask;
 use Illuminate\Database\Query\Builder;
@@ -64,6 +65,23 @@ abstract class Job implements ShouldQueue
     }
 
     /**
+     * Execute the query and fetch records for the current task in the given pipeline.
+     *
+     */
+    protected function fetch(array $pipeline) : Collection
+    {
+        $items = $pipeline[$this->task]
+            ->generate($this->id)
+            ->get();
+
+        if ($pipeline[$this->task]->hydrate) {
+            $items = $pipeline[$this->task]->model::hydrate($items->toArray());
+        }
+
+        return $items;
+    }
+
+    /**
      * Execute the job.
      *
      */
@@ -71,11 +89,53 @@ abstract class Job implements ShouldQueue
     {
         $pipeline = $this->pipeline();
 
-        $deleted = static::attempt(fn() => $this->remove($pipeline));
+        $records = $this->hasHook($pipeline) ? static::attempt(fn() => $this->fetch($pipeline)) : null;
 
-        $this->task += $deleted < config('waterfall.batch_size') ? 1 : 0;
+        // before
+        if ($this->hasBeforeHook($pipeline)) {
+            $pipeline[$this->task]['before']($records);
+        }
+
+        // delete
+        $deleted = static::attempt(fn() => $this->remove($pipeline, $records));
+
+        // after
+        if ($this->hasAfterHook($pipeline)) {
+            $pipeline[$this->task]['after']($records);
+        }
+
+        $batch = $pipeline[$this->task]->batch ?? config('waterfall.batch_size');
+
+        $this->task += $deleted < $batch ? 1 : 0;
 
         $this->task < count($pipeline) ? $this->proceed($skip) : null;
+    }
+
+    /**
+     * Determine if the current task has an after hook assigned to it.
+     *
+     */
+    protected function hasAfterHook(array $pipeline) : bool
+    {
+        return filled($pipeline[$this->task]->after);
+    }
+
+    /**
+     * Determine if the current task has a before hook assigned to it.
+     *
+     */
+    protected function hasBeforeHook(array $pipeline) : bool
+    {
+        return filled($pipeline[$this->task]->before);
+    }
+
+    /**
+     * Determine if the current task has a before or after hook assigned to it.
+     *
+     */
+    protected function hasHook(array $pipeline) : bool
+    {
+        return $this->hasBeforeHook($pipeline) || $this->hasAfterHook($pipeline);
     }
 
     /**
@@ -100,9 +160,9 @@ abstract class Job implements ShouldQueue
     protected function pipeline() : array
     {
         return array_merge(
-            [SoftDeleteTask::create(static::$type)],
+            [SoftDeleteTask::create()->model(static::$type)],
             $this->tasks(),
-            [HardDeleteTask::create(static::$type)],
+            [HardDeleteTask::create()->model(static::$type)],
         );
     }
 
@@ -123,14 +183,20 @@ abstract class Job implements ShouldQueue
     }
 
     /**
-     * Execute the query for the current task in the given pipeline.
+     * Execute the query and remove records for the current task in the given pipeline.
      *
      */
-    protected function remove(array $pipeline) : int
+    protected function remove(array $pipeline, Collection $records = null) : int
     {
-        $result = $pipeline[$this->task]->query($this->id);
+        $result = $pipeline[$this->task]->generate($this->id);
 
-        return $result instanceof Builder ? $result->delete() : $result;
+        if (! $result instanceof Builder) {
+            return $result;
+        }
+
+        return $result
+            ->when(filled($records), fn($query) => $query->whereIn('id', $records->pluck('id')))
+            ->delete();
     }
 
     /**
