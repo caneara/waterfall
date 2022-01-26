@@ -85,8 +85,12 @@ abstract class Job implements ShouldQueue
      * Execute the job.
      *
      */
-    public function handle(bool $skip = false) : void
+    public function handle(bool $skip = false)
     {
+        if (static::unavailable()) {
+            return $this->release(10);
+        }
+
         $pipeline = $this->pipeline();
 
         $records = $this->hasHook($pipeline) ? static::attempt(fn() => $this->fetch($pipeline)) : null;
