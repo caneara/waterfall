@@ -180,10 +180,13 @@ abstract class Job implements ShouldQueue
             return;
         }
 
-        $job = (new static($this->id, $this->task))
-            ->delay(config('waterfall.rest_time'));
+        $job = (new static($this->id, $this->task));
 
-        dispatch($this->log($job));
+        if ($this->connection !== 'sync') {
+            $job = $job->delay(config('waterfall.rest_time'));
+        }
+
+        dispatch($this->log($job))->onConnection($this->connection);
     }
 
     /**
