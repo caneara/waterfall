@@ -50,6 +50,17 @@ Version 2 introduces a completely different way of configuring tasks. In version
 
 As a result, the `Task` class was refactored to provide a series of setter methods that can be chained together to build up the task. It is recommended that you re-read all of the readme when upgrading.
 
+## Promo
+
+I made [Lumeno](https://lumeno.dev) to help you centralize your IT résumé, project portfolio and blog content. It aids in building a following, allows you to discover other creatives, and helps you to get invited for relevant job vacancies. Best of all, it's core feature set is free! [Get Started...](https://lumeno.dev)
+
+<!-- Screenshot -->
+<p align="center">
+    <a target="_blank" href="https://lumeno.dev">
+        <img src="resources/promotion.png" alt="Lumeno" style="height:350px">
+    </a>
+</p>
+
 ## Configuration
 
 Waterfall includes a configuration file that allows you to:
