@@ -30,7 +30,7 @@ Waterfall will then perform the following tasks
 Pull in the package using Composer:
 
 ```bash
-composer require mattkingshott/waterfall
+composer require caneara/waterfall
 ```
 
 ## Upgrading
