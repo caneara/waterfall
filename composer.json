@@ -1,5 +1,5 @@
 {
-    "name": "mattkingshott/waterfall",
+    "name": "caneara/waterfall",
     "description": "A package that performs cascading deletes in batches to ease database strain",
     "keywords": [
         "waterfall",
@@ -10,7 +10,7 @@
     ],
     "type": "library",
     "license": "MIT",
-    "homepage": "https://github.com/mattkingshott/waterfall",
+    "homepage": "https://github.com/caneara/waterfall",
     "autoload": {
         "psr-4": {
             "Waterfall\\": "src"
