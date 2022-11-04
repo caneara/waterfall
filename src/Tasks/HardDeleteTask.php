@@ -16,6 +16,6 @@ class HardDeleteTask extends Task
     {
         $query = DB::table($this->table)->where('id', $id);
 
-        return static::attempt(fn() => $query->delete());
+        return static::attempt(fn () => $query->delete());
     }
 }

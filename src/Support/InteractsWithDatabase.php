@@ -14,7 +14,7 @@ trait InteractsWithDatabase
      */
     protected static function attempt(Closure $closure) : mixed
     {
-        return retry(40, fn() => $closure(), 250);
+        return retry(40, fn () => $closure(), 250);
     }
 
     /**

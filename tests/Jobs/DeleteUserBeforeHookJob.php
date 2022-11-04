@@ -25,7 +25,7 @@ class DeleteUserBeforeHookJob extends Job
             Task::create()
                 ->model(Post::class)
                 ->hydrate()
-                ->before(fn($items) => $_ENV['before_items'] = $items),
+                ->before(fn ($items) => $_ENV['before_items'] = $items),
         ];
     }
 }

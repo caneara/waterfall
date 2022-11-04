@@ -137,7 +137,7 @@ class Task implements ArrayAccess
     {
         return DB::table($this->table)
             ->where($this->guessKey(), $id)
-            ->when(filled($this->query), fn($query) => $this['query']($query))
+            ->when(filled($this->query), fn ($query) => $this['query']($query))
             ->limit($this->batch ?? config('waterfall.batch_size'));
     }
 

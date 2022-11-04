@@ -93,7 +93,7 @@ abstract class Job implements ShouldQueue
 
         $pipeline = $this->pipeline();
 
-        $records = $this->hasHook($pipeline) ? static::attempt(fn() => $this->fetch($pipeline)) : null;
+        $records = $this->hasHook($pipeline) ? static::attempt(fn () => $this->fetch($pipeline)) : null;
 
         // before
         if ($this->hasBeforeHook($pipeline)) {
@@ -101,7 +101,7 @@ abstract class Job implements ShouldQueue
         }
 
         // delete
-        $deleted = static::attempt(fn() => $this->remove($pipeline, $records));
+        $deleted = static::attempt(fn () => $this->remove($pipeline, $records));
 
         // after
         if ($this->hasAfterHook($pipeline)) {
@@ -202,7 +202,7 @@ abstract class Job implements ShouldQueue
         }
 
         return $result
-            ->when(filled($records), fn($query) => $query->whereIn('id', $records->pluck('id')))
+            ->when(filled($records), fn ($query) => $query->whereIn('id', $records->pluck('id')))
             ->delete();
     }
 

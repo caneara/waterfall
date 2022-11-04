@@ -24,7 +24,7 @@ class DeleteUserAfterHookJob extends Job
         return [
             Task::create()
                 ->model(Post::class)
-                ->after(fn($items) => $_ENV['after_items'] = $items->pluck('id')),
+                ->after(fn ($items) => $_ENV['after_items'] = $items->pluck('id')),
         ];
     }
 }

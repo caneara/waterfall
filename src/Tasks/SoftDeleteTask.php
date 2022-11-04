@@ -21,6 +21,6 @@ class SoftDeleteTask extends Task
 
         $query = DB::table($this->table)->where('id', $id);
 
-        return static::attempt(fn() => $query->update($payload));
+        return static::attempt(fn () => $query->update($payload));
     }
 }
