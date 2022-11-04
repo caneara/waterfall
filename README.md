@@ -1,14 +1,3 @@
-<!-- Screenshot -->
-<p align="center">
-    <img src="resources/wallpaper.jpg" alt="Wallpaper">
-</p>
-
-<!-- Badges -->
-<p align="center">
-  <img src="resources/version.svg" alt="Version">
-  <img src="resources/license.svg" alt="License">
-</p>
-
 # Waterfall
 
 This package enables a Laravel application to perform database cascading delete operations in staggered batches. The primary benefit of this approach, is that it avoids overwhelming the database with a massive amount of record deletion tasks when operating large-scale applications e.g. analytic platforms.
@@ -338,10 +327,6 @@ If someone is able to come up with an efficient way to make transactions work in
 ## Contributing
 
 Thank you for considering a contribution to Waterfall. You are welcome to submit a PR containing improvements, however if they are substantial in nature, please also be sure to include a test or tests.
-
-## Support the project
-
-If you'd like to support the development of Waterfall, then please consider [sponsoring me](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YBEHLHPF3GUVY&source=url). Thanks so much!
 
 ## License
 
